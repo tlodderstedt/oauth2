@@ -1112,7 +1112,7 @@ Pragma: no-cache
                  token originates from origin A or origin E.</t>
                  <t>If the resource server only accepts the access token in an <spanx
                  style="verb">Authorization</spanx> header, then Cross-Origin Resource Sharing (CORS)
-                 <xref target="CORS"></xref> will protect against this attack by default.</t>
+                 <xref target="cors"></xref> will protect against this attack by default.</t>
                  <t>If the resource server accepts the access tokens in other ways (e.g., as a URL
                  parameter), or if the CORS policy of the resource server permits requests by origin E,
                  then the TLS-based token binding only provides protection if the browser is offline.</t>
