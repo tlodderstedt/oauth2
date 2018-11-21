@@ -13,7 +13,7 @@
 <!ENTITY I-D.narten-iana-considerations-rfc2434bis SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.narten-iana-considerations-rfc2434bis.xml">
 ]>
 <?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
-<?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
+<?rfc-ext refresh-from="draft-ietf-oauth-security-topics.xml"?> 
 <?rfc strict="yes" ?>
 <!-- give errors regarding ID-nits and DTD validation -->
 <!-- control the table of contents (ToC) -->
@@ -242,17 +242,24 @@
     grant type) as specified in <xref target="ac"/> or any other response type that
     causes the authorization server to issue access tokens in the token response.
     This allows the authorization server to detect replay attempts and 
-    generally reduces the attack surface since access tokens are not exposed in URLs. It 
+    generally reduces the attack surface since access tokens are not exposed in URLs. It  
     also allows the authorization server to sender-constrain the issued tokens.</t>
 	</section>
     </section>
     
     <section anchor="token_replay_prevention" title="Token Replay Prevention">
-    <t>Authorization servers SHOULD use TLS-based methods for sender constrained access 
+    <t>Authorization servers SHOULD use TLS-based methods for sender-constrained access 
     tokens as described in  <xref target="pop_tokens"/>, such as token 
     binding <xref target="I-D.ietf-oauth-token-binding"></xref> or Mutual TLS for 
     OAuth 2.0 <xref target="I-D.ietf-oauth-mtls"></xref> in order to prevent token replay. 
     It is also recommended to use end-to-end TLS whenever possible.</t>
+
+    <t>If access tokens are sender-constrained to a web browser, the resource server MUST ensure that the
+    access token can only be used by the origin to which the access token was issued (origin binding).
+    One solution for the resource server to accomplish this is to only accept the access token in an
+    <spanx style="verb">Authorization</spanx> header (as described in <xref target="RFC6750">RFC
+    6750</xref>) and to ensure that the active CORS policy prevents third parties from sending <spanx
+    style="verb">Authorization</spanx> headers. See <xref target="pop_tokens"/> for details.</t>
     </section>
     
     <section title="Access Token Privilege Restriction">
@@ -985,9 +992,9 @@ Pragma: no-cache
       parties.</t>    
 	  </section>
 	  
-	 <section anchor="pop_tokens" title="Sender Constrained Access Tokens"> 
+	 <section anchor="pop_tokens" title="Sender-Constrained Access Tokens"> 
 
-		 <t>As the name suggests, sender constrained access token scope the applicability 
+		 <t>As the name suggests, sender-constrained access token scope the applicability 
 		 of an access token to a certain sender. This sender is obliged to demonstrate 
 		 knowledge of a certain secret as prerequisite for the acceptance of that token 
 		 at a resource server.</t>
@@ -1088,6 +1095,27 @@ Pragma: no-cache
 		 
 		 <t>This document therefore recommends implementors to consider one of 
 		 TLS-based approaches wherever possible.</t>
+
+                 
+                 <t>It is important to note that constraining the sender of a token to a web browser
+                 (using a TLS-based method) does not constrain the origin of the script that uses the
+                 token (lack of origin binding). In other words, if access tokens are used in a browser
+                 (as in a single-page application, SPA) and the access tokens are sender-constrained
+                 using a TLS-based method, it must be ensured that origins other than the origin of the
+                 SPA cannot misuse the TLS-based sender authentication.</t>
+                 <t>The problem can be illustrated using an SPA on origin A that uses an access token AT
+                 that is bound to the TLS connection between the browser and the resource server R. If AT
+                 leaks to an attacker E, and there is, for example, an iframe from E's origin loaded in
+                 the web browser, that iframe can send a request to origin R using the access token AT.
+                 This request will contain the proof-of-posession of the (mTLS or token binding) key. The
+                 resource server R therefore cannot distinguish if a request containing a valid access
+                 token originates from origin A or origin E.</t>
+                 <t>If the resource server only accepts the access token in an <spanx
+                 style="verb">Authorization</spanx> header, then Cross-Origin Resource Sharing (CORS)
+                 <xref target="CORS"></xref> will protect against this attack by default.</t>
+                 <t>If the resource server accepts the access tokens in other ways (e.g., as a URL
+                 parameter), or if the CORS policy of the resource server permits requests by origin E,
+                 then the TLS-based token binding only provides protection if the browser is offline.</t>
 
 	</section>
 	<section anchor="aud_restriction" title="Audience Restricted Access Tokens"> 
@@ -1460,6 +1488,17 @@ Pragma: no-cache
           <date day="20" month="April" year="2017"/>
         </front>
       </reference>
+
+       <reference anchor="cors" target="https://www.w3.org/TR/cors/">
+        <front>
+          <title>Cross-Origin Resource Sharing</title>
+
+		  <author fullname="Anne van Kesteren">
+          </author>
+          <date day="16" month="January" year="2014"/>
+        </front>
+      </reference>
+
       
        <reference anchor="oauth-v2-form-post-response-mode" target="http://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html">
         <front>
